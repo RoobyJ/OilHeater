@@ -17,7 +17,7 @@ const byte heatDays[] = { 0, 1, };
 
 U8G2_SSD1312_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, A5, A4, U8X8_PIN_NONE);
 
-int speedCorrection = 3545;  // Number of milliseconds my Nano clock runs 3450
+int speedCorrection = 3545;  // Number of milliseconds my Uno clock runs 3450
                              // slow per hour
                              // negative number here if it is running fast
                              // change to match your Arduino
@@ -35,21 +35,14 @@ unsigned long lastTime = -1000;  //   lastTime that ShowTime was called initiali
 volatile unsigned long elapsed;  // Timer used for delay and hour count
 
 unsigned long millisecondsInADay;  // Milliseconds in 24 hours
-unsigned long millisecondsInHour;
-// Milliseconds in 1 hour
+unsigned long millisecondsInHour;  // Milliseconds in 1 hour
 unsigned long startHeatTime;
 
 
 float currentDate;  // Julian date
 
-int currentDay;
-int currentMonth;
-int currentYear;
-
-byte ThermistorPin = 0;
-int V0;
-float R1 = 10000;
-float logR2, R2, T;
+byte ThermistorPin = 3;
+float R1 = 2100;
 float c1 = 1.009249522e-03, c2 = 2.378405444e-04, c3 = 2.019202697e-07;
 
 bool heat = false;
@@ -77,9 +70,9 @@ void setup() {
 
     if (response.length() != 0) {
       unsigned long time = response.toInt();
-      currentDay = day(time);
-      currentMonth = month(time);
-      currentYear = year(time);
+      int currentDay = day(time);
+      int currentMonth = month(time);
+      int currentYear = year(time);
       int x = hour(time);
       int y = minute(time);
       int z = second(time);
@@ -286,12 +279,15 @@ float CalculateHeatONTime(int temp) {
 }
 
 int GetOutsideTemp() {
-  V0 = analogRead(ThermistorPin);
-  R2 = R1 * (1023.0 / (float)V0 - 1.0);
-  logR2 = log(R2);
-  T = (1.0 / (c1 + c2 * logR2 + c3 * logR2 * logR2 * logR2));
+  int V0 = analogRead(ThermistorPin);
+  float R2 = R1 * (1023.0 / (float)V0 - 1.0);
+  float logR2 = log(R2);
+  float T = (1.0 / (c1 + c2 * logR2 + c3 * logR2 * logR2 * logR2));
   T = T - 273.15;
-  return T;
+  int Tf = ( T - 32.0) * 0.5556; 
+  Serial.println(Tf);
+  Serial.println(T);
+  return Tf;
 }
 
 String getDataFromSerial() {
